@@ -12,15 +12,19 @@ def run(command):
 
 def main():
     mode = os.getenv("APP_MODE", "web").strip().lower()
+    port = os.getenv("PORT", "8000")
+    print(f"APP_MODE={mode}", flush=True)
+    print(f"PORT={port}", flush=True)
 
     if mode == "cron":
         run([sys.executable, "manage.py", "processar_notificacoes"])
         return
 
     run([sys.executable, "manage.py", "migrate"])
-    port = os.getenv("PORT", "8000")
     run(
         [
+            sys.executable,
+            "-m",
             "gunicorn",
             "arranjo_oradores.wsgi:application",
             "--bind",
