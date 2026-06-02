@@ -210,7 +210,7 @@ def enviar_whatsapp(notificacao):
 @transaction.atomic
 def processar_notificacao(notificacao):
     notificacao = (
-        Notificacao.objects.select_for_update()
+        Notificacao.objects.select_for_update(of=("self",))
         .select_related(
             "discurso",
             "discurso__tema_predefinido",
