@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 
 from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, Orador, RespostaNotificacao
+from .services import processar_notificacao
 from .services import preencher_endereco_por_cep
 
 
@@ -118,6 +119,7 @@ class NotificacaoAdmin(admin.ModelAdmin):
         "telefone_destino",
     )
     autocomplete_fields = ("discurso",)
+    actions = ("enviar_notificacoes_selecionadas", "marcar_como_pendente")
     readonly_fields = (
         "data_envio",
         "provedor",
@@ -127,6 +129,41 @@ class NotificacaoAdmin(admin.ModelAdmin):
         "status_whatsapp",
         "data_status_whatsapp",
     )
+
+    @admin.action(description="Enviar/reprocessar notificações selecionadas")
+    def enviar_notificacoes_selecionadas(self, request, queryset):
+        enviadas = 0
+        erros = 0
+        ignoradas = 0
+
+        for notificacao in queryset.select_related(
+            "discurso",
+            "discurso__orador",
+            "discurso__congregacao_destino",
+        ):
+            if notificacao.status_envio == Notificacao.StatusEnvio.ENVIADO:
+                ignoradas += 1
+                continue
+
+            resultado = processar_notificacao(notificacao)
+            if resultado.status_envio == Notificacao.StatusEnvio.ENVIADO:
+                enviadas += 1
+            elif resultado.status_envio == Notificacao.StatusEnvio.ERRO:
+                erros += 1
+
+        self.message_user(
+            request,
+            f"Processamento concluído: {enviadas} enviadas, {erros} erros, {ignoradas} ignoradas.",
+            level=messages.SUCCESS if erros == 0 else messages.WARNING,
+        )
+
+    @admin.action(description="Marcar selecionadas como pendente")
+    def marcar_como_pendente(self, request, queryset):
+        atualizadas = queryset.exclude(status_envio=Notificacao.StatusEnvio.ENVIADO).update(
+            status_envio=Notificacao.StatusEnvio.PENDENTE,
+            data_envio=None,
+        )
+        self.message_user(request, f"{atualizadas} notificações marcadas como pendente.")
 
 
 @admin.register(RespostaNotificacao)

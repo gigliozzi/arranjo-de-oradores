@@ -60,6 +60,15 @@ Para processar uma notificação específica:
 python manage.py processar_notificacoes --notificacao-id 8
 ```
 
+Também é possível enviar pelo Django Admin:
+
+1. Acesse `Notificações`.
+2. Selecione uma ou mais notificações.
+3. Escolha a ação `Enviar/reprocessar notificações selecionadas`.
+4. Clique em `Executar`.
+
+Para retestar uma notificação com erro, selecione-a e use primeiro `Marcar selecionadas como pendente`, depois execute o envio.
+
 Para iniciar o agendador diário com APScheduler:
 
 ```powershell
