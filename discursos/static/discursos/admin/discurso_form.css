@@ -1,30 +1,65 @@
-.form-row.field-orador .select2-container,
-.form-row.field-congregacao_destino .select2-container {
-    min-width: 390px;
-    max-width: 100%;
+.field-orador .related-widget-wrapper,
+.field-congregacao_destino .related-widget-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-height: 38px;
 }
 
-.form-row.field-orador .select2-selection--single,
-.form-row.field-congregacao_destino .select2-selection--single {
+.field-orador .related-widget-wrapper-link,
+.field-congregacao_destino .related-widget-wrapper-link {
+    flex: 0 0 auto;
+}
+
+.field-orador .select2-container,
+.field-congregacao_destino .select2-container,
+#id_orador + .select2-container,
+#id_congregacao_destino + .select2-container {
+    display: inline-block !important;
+    flex: 0 1 390px;
+    width: 390px !important;
+    max-width: calc(100% - 145px);
+    min-height: 38px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.field-orador .select2-selection--single,
+.field-congregacao_destino .select2-selection--single,
+#id_orador + .select2-container .select2-selection--single,
+#id_congregacao_destino + .select2-container .select2-selection--single {
+    display: block;
+    height: 38px !important;
     min-height: 38px;
     border: 1px solid #ced4da !important;
-    border-radius: 4px;
-    background-color: #fff;
+    border-radius: 4px !important;
+    background-color: #fff !important;
+    box-shadow: none;
 }
 
-.form-row.field-orador .select2-selection__rendered,
-.form-row.field-congregacao_destino .select2-selection__rendered {
-    line-height: 36px;
-    padding-left: 12px;
-}
-
-.form-row.field-orador .select2-selection__arrow,
-.form-row.field-congregacao_destino .select2-selection__arrow {
-    min-height: 36px;
-}
-
-.form-row.field-orador .select2-container--focus .select2-selection--single,
-.form-row.field-congregacao_destino .select2-container--focus .select2-selection--single {
+.field-orador .select2-container--open .select2-selection--single,
+.field-congregacao_destino .select2-container--open .select2-selection--single,
+.field-orador .select2-container--focus .select2-selection--single,
+.field-congregacao_destino .select2-container--focus .select2-selection--single {
     border-color: #80bdff !important;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.field-orador .select2-selection__rendered,
+.field-congregacao_destino .select2-selection__rendered {
+    line-height: 36px !important;
+    min-height: 36px;
+    padding-left: 12px !important;
+    padding-right: 32px !important;
+}
+
+.field-orador .select2-selection__arrow,
+.field-congregacao_destino .select2-selection__arrow {
+    height: 36px !important;
+    top: 1px !important;
+}
+
+.field-orador .select2-dropdown,
+.field-congregacao_destino .select2-dropdown {
+    z-index: 1050;
 }
