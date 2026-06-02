@@ -89,6 +89,9 @@ class DiscursoAdmin(admin.ModelAdmin):
     autocomplete_fields = ("orador", "congregacao_destino")
     inlines = [NotificacaoInline]
 
+    class Media:
+        css = {"all": ("discursos/admin/discurso_form.css",)}
+
 
 @admin.register(Notificacao)
 class NotificacaoAdmin(admin.ModelAdmin):
