@@ -120,6 +120,7 @@ ZAPI_INSTANCE_ID = os.getenv("ZAPI_INSTANCE_ID", "").strip()
 ZAPI_INSTANCE_TOKEN = os.getenv("ZAPI_INSTANCE_TOKEN", "").strip()
 ZAPI_CLIENT_TOKEN = os.getenv("ZAPI_CLIENT_TOKEN", "").strip()
 ZAPI_TIMEOUT_SECONDS = int(os.getenv("ZAPI_TIMEOUT_SECONDS", "15"))
+ZAPI_WEBHOOK_SECRET = os.getenv("ZAPI_WEBHOOK_SECRET", "").strip()
 
 JAZZMIN_SETTINGS = {
     "site_title": "Arranjo de Oradores",

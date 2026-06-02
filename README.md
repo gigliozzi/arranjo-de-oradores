@@ -107,6 +107,7 @@ ZAPI_INSTANCE_ID=sua_instancia
 ZAPI_INSTANCE_TOKEN=seu_token_da_instancia
 ZAPI_CLIENT_TOKEN=seu_client_token
 ZAPI_TIMEOUT_SECONDS=15
+ZAPI_WEBHOOK_SECRET=um-segredo-para-webhooks
 ```
 
 Depois reinicie o servidor ou o agendador.
@@ -129,6 +130,29 @@ O sistema envia:
 ```
 
 As credenciais ficam somente em variáveis de ambiente e não devem ser versionadas. O arquivo `.env` já está ignorado pelo Git.
+
+## Webhooks da Z-API
+
+O sistema possui dois endpoints para a Z-API:
+
+```text
+/webhooks/zapi/recebidas/
+/webhooks/zapi/status/
+```
+
+Em produção na Railway, configure na tela de webhooks da Z-API:
+
+```text
+Ao receber:
+https://arranjo-de-oradores-production.up.railway.app/webhooks/zapi/recebidas/?token=SEU_ZAPI_WEBHOOK_SECRET
+
+Receber status da mensagem:
+https://arranjo-de-oradores-production.up.railway.app/webhooks/zapi/status/?token=SEU_ZAPI_WEBHOOK_SECRET
+```
+
+Use o mesmo valor de `ZAPI_WEBHOOK_SECRET` configurado nas variáveis da Railway. Esse token simples impede que qualquer pessoa publique dados nos webhooks apenas conhecendo a URL.
+
+As respostas recebidas ficam em `Respostas de notificações` no Django Admin. Os eventos de entrega/leitura ficam em `Eventos de status das mensagens`.
 
 ## Deploy na Railway
 

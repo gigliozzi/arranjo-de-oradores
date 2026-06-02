@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Congregacao, Discurso, Notificacao
+from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, RespostaNotificacao
 
 MARCOS_NOTIFICACAO = (30, 15, 7, 2)
 
@@ -51,7 +51,11 @@ def identificar_notificacoes_pendentes(data_referencia=None):
 
 def enviar_whatsapp_simulado(notificacao):
     mensagem = montar_mensagem_whatsapp(notificacao)
-    return {"provider": "simulado", "message": f"Simulação WhatsApp: {mensagem}"}
+    return {
+        "provider": "simulado",
+        "message": f"Simulação WhatsApp: {mensagem}",
+        "phone": normalizar_celular(notificacao.discurso.orador.celular),
+    }
 
 
 def montar_mensagem_whatsapp(notificacao):
@@ -160,7 +164,13 @@ def enviar_whatsapp_zapi(notificacao):
             f"Resposta inesperada da Z-API: {json.dumps(body, ensure_ascii=False)}"
         )
 
-    return {"provider": "z-api", "message": json.dumps(body, ensure_ascii=False)}
+    return {
+        "provider": "z-api",
+        "message": json.dumps(body, ensure_ascii=False),
+        "phone": telefone,
+        "message_id": body.get("messageId") or body.get("id", ""),
+        "zaap_id": body.get("zaapId", ""),
+    }
 
 
 def montar_url_zapi_send_text():
@@ -209,7 +219,21 @@ def processar_notificacao(notificacao):
         notificacao.status_envio = Notificacao.StatusEnvio.ENVIADO
         notificacao.data_envio = timezone.now()
         notificacao.resposta_api = resposta["message"]
-    notificacao.save(update_fields=["status_envio", "data_envio", "resposta_api"])
+        notificacao.provedor = resposta.get("provider", "")
+        notificacao.telefone_destino = resposta.get("phone", "")
+        notificacao.message_id = resposta.get("message_id", "")
+        notificacao.zaap_id = resposta.get("zaap_id", "")
+    notificacao.save(
+        update_fields=[
+            "status_envio",
+            "data_envio",
+            "resposta_api",
+            "provedor",
+            "telefone_destino",
+            "message_id",
+            "zaap_id",
+        ]
+    )
     return notificacao
 
 
@@ -260,3 +284,89 @@ def processar_notificacoes_pendentes(data_referencia=None, notificacao_id=None, 
         "dry_run": False,
         "notificacoes": notificacoes,
     }
+
+
+def timestamp_zapi_para_datetime(valor):
+    if not valor:
+        return timezone.now()
+    try:
+        timestamp = int(valor)
+    except (TypeError, ValueError):
+        return timezone.now()
+    if timestamp > 10_000_000_000:
+        timestamp = timestamp / 1000
+    return timezone.datetime.fromtimestamp(timestamp, tz=timezone.get_current_timezone())
+
+
+def extrair_texto_payload_recebido(payload):
+    texto = payload.get("text")
+    if isinstance(texto, dict):
+        return texto.get("message", "") or texto.get("description", "")
+    if isinstance(texto, str):
+        return texto
+    return payload.get("message", "") or payload.get("body", "")
+
+
+def encontrar_notificacao_por_resposta(payload):
+    reference_message_id = payload.get("referenceMessageId") or payload.get("quotedMsgId") or ""
+    if reference_message_id:
+        notificacao = Notificacao.objects.filter(message_id=reference_message_id).first()
+        if notificacao:
+            return notificacao
+
+    telefone = normalizar_celular(payload.get("phone", ""))
+    if not telefone:
+        return None
+
+    return (
+        Notificacao.objects.filter(
+            telefone_destino=telefone,
+            status_envio=Notificacao.StatusEnvio.ENVIADO,
+        )
+        .order_by("-data_envio", "-id")
+        .first()
+    )
+
+
+def registrar_resposta_notificacao(payload):
+    if payload.get("fromMe") or payload.get("isGroup") or payload.get("isNewsletter"):
+        return None
+
+    notificacao = encontrar_notificacao_por_resposta(payload)
+    resposta = RespostaNotificacao.objects.create(
+        notificacao=notificacao,
+        telefone=normalizar_celular(payload.get("phone", "")),
+        nome_contato=payload.get("senderName", "") or payload.get("chatName", ""),
+        mensagem=extrair_texto_payload_recebido(payload),
+        message_id=payload.get("messageId", ""),
+        reference_message_id=payload.get("referenceMessageId", "") or payload.get("quotedMsgId", ""),
+        data_recebimento=timestamp_zapi_para_datetime(payload.get("momment")),
+        payload_api=payload,
+    )
+    return resposta
+
+
+def registrar_status_mensagem(payload):
+    ids = payload.get("ids") or []
+    if isinstance(ids, str):
+        ids = [ids]
+
+    eventos = []
+    for message_id in ids:
+        notificacao = Notificacao.objects.filter(message_id=message_id).first()
+        evento = EventoStatusMensagem.objects.create(
+            notificacao=notificacao,
+            status=payload.get("status", ""),
+            telefone=normalizar_celular(payload.get("phone", "")),
+            message_id=message_id,
+            data_evento=timestamp_zapi_para_datetime(payload.get("momment")),
+            payload_api=payload,
+        )
+        eventos.append(evento)
+
+        if notificacao:
+            notificacao.status_whatsapp = evento.status
+            notificacao.data_status_whatsapp = evento.data_evento
+            notificacao.save(update_fields=["status_whatsapp", "data_status_whatsapp"])
+
+    return eventos

@@ -1,11 +1,12 @@
 from datetime import time, timedelta
 from unittest.mock import Mock, patch
 
+from django.test import Client
 from django.test import override_settings
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Congregacao, Discurso, Notificacao, Orador
+from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, Orador, RespostaNotificacao
 from .services import (
     buscar_endereco_por_cep,
     criar_notificacoes_para_discurso,
@@ -124,6 +125,8 @@ class NotificacaoTests(TestCase):
         notificacao.refresh_from_db()
         self.assertEqual(resultado["pendentes"], 1)
         self.assertEqual(notificacao.status_envio, Notificacao.StatusEnvio.ENVIADO)
+        self.assertEqual(notificacao.provedor, "simulado")
+        self.assertEqual(notificacao.telefone_destino, "5511999999999")
 
     @override_settings(
         ZAPI_BASE_URL="https://api.z-api.io",
@@ -148,6 +151,7 @@ class NotificacaoTests(TestCase):
         self.assertIn("Confie em Jeová", kwargs["json"]["message"])
         self.assertEqual(kwargs["headers"]["Client-Token"], "client-token")
         self.assertEqual(resultado["provider"], "z-api")
+        self.assertEqual(resultado["message_id"], "abc123")
 
     @override_settings(
         ZAPI_BASE_URL="https://api.z-api.io",
@@ -227,3 +231,91 @@ class NotificacaoTests(TestCase):
         self.assertEqual(congregacao.logradouro, "Praça da Sé")
         self.assertEqual(congregacao.numero, "123")
         self.assertEqual(congregacao.bairro, "Sé")
+
+
+class WebhookZapiTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.orador = Orador.objects.create(
+            nome="João Silva",
+            celular="5511999999999",
+            congregacao_origem="Central",
+        )
+        self.congregacao = Congregacao.objects.create(
+            nome="Jardim",
+            cidade="São Paulo",
+            estado="SP",
+        )
+        self.discurso = Discurso.objects.create(
+            orador=self.orador,
+            tema="Confie em Jeová",
+            congregacao_destino=self.congregacao,
+            data=timezone.localdate() + timedelta(days=2),
+            hora=time(19, 30),
+            status=Discurso.Status.AGENDADO,
+        )
+        self.notificacao = self.discurso.notificacoes.get(marco=2)
+        self.notificacao.status_envio = Notificacao.StatusEnvio.ENVIADO
+        self.notificacao.data_envio = timezone.now()
+        self.notificacao.telefone_destino = "5511999999999"
+        self.notificacao.message_id = "MSG-ENVIADA"
+        self.notificacao.save(
+            update_fields=["status_envio", "data_envio", "telefone_destino", "message_id"]
+        )
+
+    @override_settings(ZAPI_WEBHOOK_SECRET="segredo")
+    def test_webhook_recebidas_exige_token(self):
+        response = self.client.post(
+            "/webhooks/zapi/recebidas/",
+            data={},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+    @override_settings(ZAPI_WEBHOOK_SECRET="segredo")
+    def test_webhook_recebidas_salva_resposta(self):
+        payload = {
+            "type": "ReceivedCallback",
+            "phone": "5511999999999",
+            "fromMe": False,
+            "isGroup": False,
+            "messageId": "MSG-RESPOSTA",
+            "referenceMessageId": "MSG-ENVIADA",
+            "senderName": "João Silva",
+            "momment": 1780360000000,
+            "text": {"message": "1"},
+        }
+
+        response = self.client.post(
+            "/webhooks/zapi/recebidas/?token=segredo",
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        resposta = RespostaNotificacao.objects.get()
+        self.assertEqual(resposta.notificacao, self.notificacao)
+        self.assertEqual(resposta.mensagem, "1")
+        self.assertEqual(resposta.telefone, "5511999999999")
+
+    @override_settings(ZAPI_WEBHOOK_SECRET="segredo")
+    def test_webhook_status_atualiza_notificacao(self):
+        payload = {
+            "type": "MessageStatusCallback",
+            "status": "READ",
+            "ids": ["MSG-ENVIADA"],
+            "phone": "5511999999999",
+            "momment": 1780360000000,
+        }
+
+        response = self.client.post(
+            "/webhooks/zapi/status/?token=segredo",
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.notificacao.refresh_from_db()
+        self.assertEqual(EventoStatusMensagem.objects.count(), 1)
+        self.assertEqual(self.notificacao.status_whatsapp, "READ")

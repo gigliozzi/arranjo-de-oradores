@@ -129,6 +129,12 @@ class Notificacao(models.Model):
         choices=StatusEnvio.choices,
         default=StatusEnvio.PENDENTE,
     )
+    provedor = models.CharField(max_length=30, blank=True)
+    telefone_destino = models.CharField(max_length=30, blank=True)
+    message_id = models.CharField(max_length=100, blank=True, db_index=True)
+    zaap_id = models.CharField(max_length=100, blank=True, db_index=True)
+    status_whatsapp = models.CharField(max_length=30, blank=True)
+    data_status_whatsapp = models.DateTimeField(null=True, blank=True)
     resposta_api = models.TextField(blank=True)
 
     objects = NotificacaoQuerySet.as_manager()
@@ -150,3 +156,52 @@ class Notificacao(models.Model):
     def clean(self):
         if self.marco not in self.Marco.values:
             raise ValidationError({"marco": "Marco de notificação inválido."})
+
+
+class RespostaNotificacao(models.Model):
+    notificacao = models.ForeignKey(
+        Notificacao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="respostas",
+    )
+    telefone = models.CharField(max_length=30)
+    nome_contato = models.CharField(max_length=150, blank=True)
+    mensagem = models.TextField(blank=True)
+    message_id = models.CharField(max_length=100, blank=True, db_index=True)
+    reference_message_id = models.CharField(max_length=100, blank=True, db_index=True)
+    data_recebimento = models.DateTimeField(default=timezone.now)
+    payload_api = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-data_recebimento", "-id"]
+        verbose_name = "resposta de notificação"
+        verbose_name_plural = "respostas de notificações"
+
+    def __str__(self):
+        alvo = self.notificacao or self.telefone
+        return f"Resposta de {self.telefone} para {alvo}"
+
+
+class EventoStatusMensagem(models.Model):
+    notificacao = models.ForeignKey(
+        Notificacao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="eventos_status",
+    )
+    status = models.CharField(max_length=30)
+    telefone = models.CharField(max_length=30, blank=True)
+    message_id = models.CharField(max_length=100, blank=True, db_index=True)
+    data_evento = models.DateTimeField(default=timezone.now)
+    payload_api = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-data_evento", "-id"]
+        verbose_name = "evento de status da mensagem"
+        verbose_name_plural = "eventos de status das mensagens"
+
+    def __str__(self):
+        return f"{self.status} - {self.message_id or self.telefone}"

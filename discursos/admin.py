@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from .models import Congregacao, Discurso, Notificacao, Orador
+from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, Orador, RespostaNotificacao
 from .services import preencher_endereco_por_cep
 
 
@@ -64,7 +64,7 @@ class CongregacaoAdmin(admin.ModelAdmin):
 class NotificacaoInline(admin.TabularInline):
     model = Notificacao
     extra = 0
-    readonly_fields = ("data_envio", "resposta_api")
+    readonly_fields = ("data_envio", "message_id", "zaap_id", "status_whatsapp", "resposta_api")
 
 
 @admin.register(Discurso)
@@ -96,12 +96,14 @@ class NotificacaoAdmin(admin.ModelAdmin):
         "discurso",
         "marco",
         "status_envio",
+        "status_whatsapp",
         "data_envio",
     )
     list_filter = (
         "data_prevista",
         "marco",
         "status_envio",
+        "status_whatsapp",
         "discurso__orador",
         "discurso__congregacao_destino",
         "discurso__status",
@@ -111,6 +113,51 @@ class NotificacaoAdmin(admin.ModelAdmin):
         "discurso__orador__nome",
         "discurso__congregacao_destino__nome",
         "resposta_api",
+        "message_id",
+        "zaap_id",
+        "telefone_destino",
     )
     autocomplete_fields = ("discurso",)
-    readonly_fields = ("data_envio",)
+    readonly_fields = (
+        "data_envio",
+        "provedor",
+        "telefone_destino",
+        "message_id",
+        "zaap_id",
+        "status_whatsapp",
+        "data_status_whatsapp",
+    )
+
+
+@admin.register(RespostaNotificacao)
+class RespostaNotificacaoAdmin(admin.ModelAdmin):
+    list_display = ("data_recebimento", "telefone", "nome_contato", "notificacao", "mensagem")
+    list_filter = ("data_recebimento",)
+    search_fields = (
+        "telefone",
+        "nome_contato",
+        "mensagem",
+        "message_id",
+        "reference_message_id",
+        "notificacao__discurso__orador__nome",
+    )
+    autocomplete_fields = ("notificacao",)
+    readonly_fields = (
+        "notificacao",
+        "telefone",
+        "nome_contato",
+        "mensagem",
+        "message_id",
+        "reference_message_id",
+        "data_recebimento",
+        "payload_api",
+    )
+
+
+@admin.register(EventoStatusMensagem)
+class EventoStatusMensagemAdmin(admin.ModelAdmin):
+    list_display = ("data_evento", "status", "telefone", "message_id", "notificacao")
+    list_filter = ("status", "data_evento")
+    search_fields = ("telefone", "message_id", "notificacao__discurso__orador__nome")
+    autocomplete_fields = ("notificacao",)
+    readonly_fields = ("notificacao", "status", "telefone", "message_id", "data_evento", "payload_api")
