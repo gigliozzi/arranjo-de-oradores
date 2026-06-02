@@ -17,10 +17,12 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
         "DJANGO_ALLOWED_HOSTS",
-        "127.0.0.1,localhost,.up.railway.app,healthcheck.railway.app",
+        "127.0.0.1,localhost,.up.railway.app",
     ).split(",")
     if host.strip()
 ]
+if "healthcheck.railway.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("healthcheck.railway.app")
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.up.railway.app").split(",")
