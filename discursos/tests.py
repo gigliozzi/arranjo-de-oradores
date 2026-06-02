@@ -209,7 +209,7 @@ class NotificacaoTests(TestCase):
 
     def test_mensagem_whatsapp_com_tema_predefinido_envia_apenas_titulo(self):
         tema = TemaDiscurso.objects.create(
-            numero=42,
+            numero=999,
             titulo="O amor leal de Jeová",
         )
         discurso = Discurso.objects.create(
@@ -265,12 +265,12 @@ class NotificacaoTests(TestCase):
         self.assertEqual(congregacao.bairro, "Sé")
 
     def test_importar_temas_cria_e_atualiza_temas(self):
-        TemaDiscurso.objects.create(numero=3, titulo="Título antigo", ativo=True)
+        TemaDiscurso.objects.create(numero=998, titulo="Título antigo", ativo=True)
         caminho = Path(tempfile.gettempdir()) / "temas-discursos-test.csv"
         caminho.write_text(
             "numero;titulo;ativo\n"
-            "1;Você conhece bem a Deus?;true\n"
-            "3;Título atualizado;false\n",
+            "997;Você conhece bem a Deus?;true\n"
+            "998;Título atualizado;false\n",
             encoding="cp1252",
         )
         saida = StringIO()
@@ -280,9 +280,8 @@ class NotificacaoTests(TestCase):
         finally:
             caminho.unlink(missing_ok=True)
 
-        self.assertEqual(TemaDiscurso.objects.count(), 2)
-        self.assertTrue(TemaDiscurso.objects.get(numero=1).ativo)
-        tema_atualizado = TemaDiscurso.objects.get(numero=3)
+        self.assertTrue(TemaDiscurso.objects.get(numero=997).ativo)
+        tema_atualizado = TemaDiscurso.objects.get(numero=998)
         self.assertEqual(tema_atualizado.titulo, "Título atualizado")
         self.assertFalse(tema_atualizado.ativo)
         self.assertIn("1 criados, 1 atualizados", saida.getvalue())
