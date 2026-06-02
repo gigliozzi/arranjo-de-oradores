@@ -130,6 +130,9 @@ class NotificacaoAdmin(admin.ModelAdmin):
         "data_status_whatsapp",
     )
 
+    class Media:
+        js = ("discursos/admin/notificacao_actions.js",)
+
     @admin.action(description="Enviar/reprocessar notificações selecionadas")
     def enviar_notificacoes_selecionadas(self, request, queryset):
         enviadas = 0
