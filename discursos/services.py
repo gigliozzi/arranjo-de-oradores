@@ -7,7 +7,13 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, RespostaNotificacao
+from .models import (
+    Congregacao,
+    Discurso,
+    EventoStatusMensagem,
+    Notificacao,
+    RespostaNotificacao,
+)
 
 MARCOS_NOTIFICACAO = (30, 15, 7, 2)
 
@@ -65,10 +71,10 @@ def montar_mensagem_whatsapp(notificacao):
     return (
         f"Olá, irmão *{discurso.orador.nome}*. \n\n"
         f"Este é um lembrete automático do seu discurso que ocorrerá em {notificacao.marco} dias. \n\n"
-        f"Tema: {discurso.tema}. \n"
-        f"Congregação: {discurso.congregacao_destino.nome}. \n"
+        f"Tema: {discurso.tema} \n"
+        f"Congregação: {discurso.congregacao_destino.nome} \n"
         f"{endereco_linha}"
-        f"Data: {discurso.data:%d/%m/%Y} às {discurso.hora:%H:%M}. \n\n"
+        f"Data: {discurso.data:%d/%m/%Y} às {discurso.hora:%H:%M} \n\n"
         f"Em caso de imprevistos, por favor, entre em contato com o irmão Sebastião Paulo."
     )
 
@@ -237,7 +243,9 @@ def processar_notificacao(notificacao):
     return notificacao
 
 
-def listar_notificacoes_para_processamento(data_referencia=None, notificacao_id=None, limite=None):
+def listar_notificacoes_para_processamento(
+    data_referencia=None, notificacao_id=None, limite=None
+):
     sincronizar_notificacoes_agendadas()
     if notificacao_id:
         queryset = Notificacao.objects.filter(pk=notificacao_id).select_related(
@@ -254,7 +262,9 @@ def listar_notificacoes_para_processamento(data_referencia=None, notificacao_id=
     return list(queryset)
 
 
-def processar_notificacoes_pendentes(data_referencia=None, notificacao_id=None, limite=None, dry_run=False):
+def processar_notificacoes_pendentes(
+    data_referencia=None, notificacao_id=None, limite=None, dry_run=False
+):
     notificacoes = listar_notificacoes_para_processamento(
         data_referencia=data_referencia,
         notificacao_id=notificacao_id,
@@ -295,7 +305,9 @@ def timestamp_zapi_para_datetime(valor):
         return timezone.now()
     if timestamp > 10_000_000_000:
         timestamp = timestamp / 1000
-    return timezone.datetime.fromtimestamp(timestamp, tz=timezone.get_current_timezone())
+    return timezone.datetime.fromtimestamp(
+        timestamp, tz=timezone.get_current_timezone()
+    )
 
 
 def extrair_texto_payload_recebido(payload):
@@ -308,9 +320,13 @@ def extrair_texto_payload_recebido(payload):
 
 
 def encontrar_notificacao_por_resposta(payload):
-    reference_message_id = payload.get("referenceMessageId") or payload.get("quotedMsgId") or ""
+    reference_message_id = (
+        payload.get("referenceMessageId") or payload.get("quotedMsgId") or ""
+    )
     if reference_message_id:
-        notificacao = Notificacao.objects.filter(message_id=reference_message_id).first()
+        notificacao = Notificacao.objects.filter(
+            message_id=reference_message_id
+        ).first()
         if notificacao:
             return notificacao
 
@@ -339,7 +355,8 @@ def registrar_resposta_notificacao(payload):
         nome_contato=payload.get("senderName", "") or payload.get("chatName", ""),
         mensagem=extrair_texto_payload_recebido(payload),
         message_id=payload.get("messageId", ""),
-        reference_message_id=payload.get("referenceMessageId", "") or payload.get("quotedMsgId", ""),
+        reference_message_id=payload.get("referenceMessageId", "")
+        or payload.get("quotedMsgId", ""),
         data_recebimento=timestamp_zapi_para_datetime(payload.get("momment")),
         payload_api=payload,
     )
