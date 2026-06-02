@@ -203,12 +203,27 @@ python manage.py migrate && gunicorn arranjo_oradores.wsgi:application --bind 0.
 
 A Railway fornece a variável `$PORT`; por isso o servidor precisa escutar em `0.0.0.0:$PORT`.
 
-### Agendador na Railway
+### Disparo automático diário na Railway
 
-O serviço web roda o Django Admin e recebe webhooks. Para executar verificações diárias, crie um segundo serviço na Railway usando o mesmo repositório e configure o start command como:
+O serviço web roda o Django Admin e recebe webhooks. Para executar verificações diárias automaticamente, crie um segundo serviço na Railway como **Cron Job**, usando o mesmo repositório e as mesmas variáveis de ambiente do serviço web.
 
-```bash
-python manage.py iniciar_agendador --hora 08:00
+Configure esse segundo serviço assim:
+
+```text
+Start Command:
+python manage.py processar_notificacoes
+
+Cron Schedule:
+0 11 * * *
 ```
 
-Esse segundo serviço deve usar as mesmas variáveis de ambiente e o mesmo `DATABASE_URL`.
+Esse exemplo roda todos os dias às 11:00 UTC, que corresponde a 08:00 em America/Sao_Paulo.
+
+Não use `python manage.py iniciar_agendador` na Railway. O APScheduler é útil para execução local ou para um worker contínuo, mas a Railway recomenda cron jobs que executam uma tarefa curta e terminam. O comando `processar_notificacoes` faz exatamente isso: verifica as notificações pendentes, envia o que for devido e encerra o processo.
+
+O serviço Cron Job deve usar:
+
+- o mesmo `DATABASE_URL` do PostgreSQL;
+- as mesmas variáveis da Z-API;
+- `DJANGO_DEBUG=False`;
+- sem domínio público, pois ele não recebe HTTP.

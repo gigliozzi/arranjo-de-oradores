@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connections
 
 from discursos.models import Notificacao
 from discursos.services import processar_notificacoes_pendentes
@@ -25,35 +26,38 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        limite = options.get("limite")
-        if limite is not None and limite < 1:
-            self.stderr.write(self.style.ERROR("--limite deve ser maior que zero."))
-            return
+        try:
+            limite = options.get("limite")
+            if limite is not None and limite < 1:
+                self.stderr.write(self.style.ERROR("--limite deve ser maior que zero."))
+                return
 
-        resultado = processar_notificacoes_pendentes(
-            notificacao_id=options.get("notificacao_id"),
-            limite=limite,
-            dry_run=options["dry_run"],
-        )
+            resultado = processar_notificacoes_pendentes(
+                notificacao_id=options.get("notificacao_id"),
+                limite=limite,
+                dry_run=options["dry_run"],
+            )
 
-        if options["dry_run"]:
-            self.stdout.write(self.style.WARNING("DRY-RUN: nenhuma mensagem foi enviada."))
-            self._escrever_notificacoes(resultado["notificacoes"])
+            if options["dry_run"]:
+                self.stdout.write(self.style.WARNING("DRY-RUN: nenhuma mensagem foi enviada."))
+                self._escrever_notificacoes(resultado["notificacoes"])
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Notificações encontradas: {resultado['pendentes']}."
+                    )
+                )
+                return
+
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Notificações encontradas: {resultado['pendentes']}."
+                    "Notificações processadas: "
+                    f"{resultado['pendentes']} pendentes, "
+                    f"{resultado['enviadas']} enviadas, "
+                    f"{resultado['erros']} erros."
                 )
             )
-            return
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Notificações processadas: "
-                f"{resultado['pendentes']} pendentes, "
-                f"{resultado['enviadas']} enviadas, "
-                f"{resultado['erros']} erros."
-            )
-        )
+        finally:
+            connections.close_all()
 
     def _escrever_notificacoes(self, notificacoes):
         for notificacao in notificacoes:
