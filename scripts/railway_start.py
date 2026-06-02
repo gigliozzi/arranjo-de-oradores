@@ -29,6 +29,14 @@ def main():
             "arranjo_oradores.wsgi:application",
             "--bind",
             f"0.0.0.0:{port}",
+            "--workers",
+            "1",
+            "--timeout",
+            "60",
+            "--access-logfile",
+            "-",
+            "--error-logfile",
+            "-",
         ]
     )
 
