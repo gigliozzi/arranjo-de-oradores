@@ -1,12 +1,24 @@
 from datetime import time, timedelta
+from io import StringIO
+from pathlib import Path
+import tempfile
 from unittest.mock import Mock, patch
 
+from django.core.management import call_command
 from django.test import Client
 from django.test import override_settings
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, Orador, RespostaNotificacao
+from .models import (
+    Congregacao,
+    Discurso,
+    EventoStatusMensagem,
+    Notificacao,
+    Orador,
+    RespostaNotificacao,
+    TemaDiscurso,
+)
 from .services import (
     buscar_endereco_por_cep,
     criar_notificacoes_para_discurso,
@@ -195,6 +207,26 @@ class NotificacaoTests(TestCase):
         self.assertIn("Praça da Sé, 10", mensagem)
         self.assertIn("CEP 01001-000", mensagem)
 
+    def test_mensagem_whatsapp_com_tema_predefinido_envia_apenas_titulo(self):
+        tema = TemaDiscurso.objects.create(
+            numero=42,
+            titulo="O amor leal de Jeová",
+        )
+        discurso = Discurso.objects.create(
+            orador=self.orador,
+            tema_predefinido=tema,
+            congregacao_destino=self.congregacao,
+            data=timezone.localdate() + timedelta(days=30),
+            hora=time(19, 30),
+            status=Discurso.Status.AGENDADO,
+        )
+        notificacao = discurso.notificacoes.get(marco=30)
+
+        mensagem = montar_mensagem_whatsapp(notificacao)
+
+        self.assertIn("Tema: O amor leal de Jeová", mensagem)
+        self.assertNotIn("42 - O amor leal de Jeová", mensagem)
+
     @patch("discursos.services.requests.get")
     def test_buscar_endereco_por_cep_usa_viacep(self, get):
         response = Mock(status_code=200)
@@ -231,6 +263,29 @@ class NotificacaoTests(TestCase):
         self.assertEqual(congregacao.logradouro, "Praça da Sé")
         self.assertEqual(congregacao.numero, "123")
         self.assertEqual(congregacao.bairro, "Sé")
+
+    def test_importar_temas_cria_e_atualiza_temas(self):
+        TemaDiscurso.objects.create(numero=3, titulo="Título antigo", ativo=True)
+        caminho = Path(tempfile.gettempdir()) / "temas-discursos-test.csv"
+        caminho.write_text(
+            "numero;titulo;ativo\n"
+            "1;Você conhece bem a Deus?;true\n"
+            "3;Título atualizado;false\n",
+            encoding="cp1252",
+        )
+        saida = StringIO()
+
+        try:
+            call_command("importar_temas", str(caminho), stdout=saida)
+        finally:
+            caminho.unlink(missing_ok=True)
+
+        self.assertEqual(TemaDiscurso.objects.count(), 2)
+        self.assertTrue(TemaDiscurso.objects.get(numero=1).ativo)
+        tema_atualizado = TemaDiscurso.objects.get(numero=3)
+        self.assertEqual(tema_atualizado.titulo, "Título atualizado")
+        self.assertFalse(tema_atualizado.ativo)
+        self.assertIn("1 criados, 1 atualizados", saida.getvalue())
 
 
 class WebhookZapiTests(TestCase):

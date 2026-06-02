@@ -1,6 +1,16 @@
+from django import forms
 from django.contrib import admin, messages
+from django.db.models import Q
 
-from .models import Congregacao, Discurso, EventoStatusMensagem, Notificacao, Orador, RespostaNotificacao
+from .models import (
+    Congregacao,
+    Discurso,
+    EventoStatusMensagem,
+    Notificacao,
+    Orador,
+    RespostaNotificacao,
+    TemaDiscurso,
+)
 from .services import processar_notificacao
 from .services import preencher_endereco_por_cep
 
@@ -62,32 +72,62 @@ class CongregacaoAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+@admin.register(TemaDiscurso)
+class TemaDiscursoAdmin(admin.ModelAdmin):
+    list_display = ("numero", "titulo", "ativo")
+    list_filter = ("ativo",)
+    search_fields = ("=numero", "titulo")
+    list_editable = ("ativo",)
+
+
 class NotificacaoInline(admin.TabularInline):
     model = Notificacao
     extra = 0
     readonly_fields = ("data_envio", "message_id", "zaap_id", "status_whatsapp", "resposta_api")
 
 
+class DiscursoAdminForm(forms.ModelForm):
+    class Meta:
+        model = Discurso
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        queryset = TemaDiscurso.objects.filter(ativo=True)
+        if self.instance and self.instance.tema_predefinido_id:
+            queryset = TemaDiscurso.objects.filter(
+                Q(ativo=True) | Q(pk=self.instance.tema_predefinido_id)
+            )
+        self.fields["tema_predefinido"].queryset = queryset.order_by("numero")
+
+
 @admin.register(Discurso)
 class DiscursoAdmin(admin.ModelAdmin):
+    form = DiscursoAdminForm
     list_display = (
         "data",
         "hora",
-        "tema",
+        "tema_do_discurso",
         "orador",
         "congregacao_destino",
         "status",
     )
-    list_filter = ("data", "orador", "congregacao_destino", "status")
+    list_filter = ("data", "orador", "congregacao_destino", "tema_predefinido", "status")
     search_fields = (
         "tema",
+        "=tema_predefinido__numero",
+        "tema_predefinido__titulo",
         "orador__nome",
         "congregacao_destino__nome",
         "congregacao_destino__cidade",
     )
     date_hierarchy = "data"
-    autocomplete_fields = ("orador", "congregacao_destino")
+    autocomplete_fields = ("orador", "tema_predefinido", "congregacao_destino")
     inlines = [NotificacaoInline]
+
+    @admin.display(description="Tema", ordering="tema_predefinido__numero")
+    def tema_do_discurso(self, obj):
+        return obj.tema_para_exibicao
 
     class Media:
         css = {"all": ("discursos/admin/discurso_form.css",)}
@@ -114,6 +154,8 @@ class NotificacaoAdmin(admin.ModelAdmin):
     )
     search_fields = (
         "discurso__tema",
+        "=discurso__tema_predefinido__numero",
+        "discurso__tema_predefinido__titulo",
         "discurso__orador__nome",
         "discurso__congregacao_destino__nome",
         "resposta_api",

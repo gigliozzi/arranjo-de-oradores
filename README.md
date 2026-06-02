@@ -69,6 +69,41 @@ Também é possível enviar pelo Django Admin:
 
 Para retestar uma notificação com erro, selecione-a e use primeiro `Marcar selecionadas como pendente`, depois execute o envio.
 
+## Temas de discursos
+
+O cadastro de discursos pode usar uma lista predefinida de temas em `Temas de discursos` no Django Admin.
+
+Cada tema possui:
+
+- número
+- título
+- ativo
+
+O número facilita a busca e a identificação no Admin. Nas mensagens de WhatsApp, o sistema envia apenas o título do tema, sem o número.
+
+Para importar uma lista a partir de CSV ou TXT, use um arquivo com cabeçalho:
+
+```csv
+numero;titulo;ativo
+1;Você conhece bem a Deus?;true
+2;Você vai sobreviver aos últimos dias?;true
+3;Tema descontinuado;false
+```
+
+Execute:
+
+```powershell
+python manage.py importar_temas "C:\Users\gigli\OneDrive\Documents\esbocos-discursos.CSV"
+```
+
+Se um tema mudar de nome, mantenha o mesmo número no arquivo e rode o comando novamente. O sistema atualiza o título e o status ativo/inativo.
+
+Para marcar como inativos os temas cadastrados que não aparecem mais no arquivo:
+
+```powershell
+python manage.py importar_temas "C:\Users\gigli\OneDrive\Documents\esbocos-discursos.CSV" --desativar-ausentes
+```
+
 Para iniciar o agendador diário com APScheduler:
 
 ```powershell

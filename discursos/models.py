@@ -60,6 +60,20 @@ class Congregacao(models.Model):
         return " - ".join(partes)
 
 
+class TemaDiscurso(models.Model):
+    numero = models.PositiveIntegerField("número", unique=True)
+    titulo = models.CharField("título", max_length=255)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["numero"]
+        verbose_name = "tema de discurso"
+        verbose_name_plural = "temas de discursos"
+
+    def __str__(self):
+        return f"{self.numero} - {self.titulo}"
+
+
 class Discurso(models.Model):
     class Status(models.TextChoices):
         AGENDADO = "agendado", "Agendado"
@@ -68,7 +82,15 @@ class Discurso(models.Model):
         REALIZADO = "realizado", "Realizado"
 
     orador = models.ForeignKey(Orador, on_delete=models.PROTECT, related_name="discursos")
-    tema = models.CharField(max_length=200)
+    tema_predefinido = models.ForeignKey(
+        TemaDiscurso,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="discursos",
+        verbose_name="tema predefinido",
+    )
+    tema = models.CharField("tema manual", max_length=200, blank=True)
     congregacao_destino = models.ForeignKey(
         Congregacao,
         on_delete=models.PROTECT,
@@ -90,11 +112,29 @@ class Discurso(models.Model):
         verbose_name_plural = "discursos"
 
     def __str__(self):
-        return f"{self.tema} - {self.orador} ({self.data:%d/%m/%Y})"
+        return f"{self.tema_para_exibicao} - {self.orador} ({self.data:%d/%m/%Y})"
+
+    @property
+    def tema_para_exibicao(self):
+        if self.tema_predefinido:
+            return str(self.tema_predefinido)
+        return self.tema
+
+    @property
+    def tema_para_mensagem(self):
+        if self.tema_predefinido:
+            return self.tema_predefinido.titulo
+        return self.tema
 
     @property
     def pode_notificar(self):
         return self.status in {self.Status.AGENDADO, self.Status.CONFIRMADO}
+
+    def clean(self):
+        if not self.tema_predefinido and not self.tema:
+            raise ValidationError(
+                {"tema_predefinido": "Informe um tema predefinido ou um tema manual."}
+            )
 
 
 class NotificacaoQuerySet(models.QuerySet):

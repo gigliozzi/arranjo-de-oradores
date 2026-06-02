@@ -50,6 +50,7 @@ def identificar_notificacoes_pendentes(data_referencia=None):
         data_referencia=data_referencia
     ).select_related(
         "discurso",
+        "discurso__tema_predefinido",
         "discurso__orador",
         "discurso__congregacao_destino",
     )
@@ -71,7 +72,7 @@ def montar_mensagem_whatsapp(notificacao):
     return (
         f"Olá, irmão *{discurso.orador.nome}*. \n\n"
         f"Este é um lembrete automático do seu discurso que ocorrerá em {notificacao.marco} dias. \n\n"
-        f"Tema: {discurso.tema} \n"
+        f"Tema: {discurso.tema_para_mensagem} \n"
         f"Congregação: {discurso.congregacao_destino.nome} \n"
         f"{endereco_linha}"
         f"Data: {discurso.data:%d/%m/%Y} às {discurso.hora:%H:%M} \n\n"
@@ -210,7 +211,12 @@ def enviar_whatsapp(notificacao):
 def processar_notificacao(notificacao):
     notificacao = (
         Notificacao.objects.select_for_update()
-        .select_related("discurso", "discurso__orador", "discurso__congregacao_destino")
+        .select_related(
+            "discurso",
+            "discurso__tema_predefinido",
+            "discurso__orador",
+            "discurso__congregacao_destino",
+        )
         .get(pk=notificacao.pk)
     )
     if notificacao.status_envio == Notificacao.StatusEnvio.ENVIADO:
@@ -250,6 +256,7 @@ def listar_notificacoes_para_processamento(
     if notificacao_id:
         queryset = Notificacao.objects.filter(pk=notificacao_id).select_related(
             "discurso",
+            "discurso__tema_predefinido",
             "discurso__orador",
             "discurso__congregacao_destino",
         )
