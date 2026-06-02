@@ -198,10 +198,10 @@ python manage.py collectstatic --noinput
 O start command executa:
 
 ```bash
-python manage.py migrate && gunicorn arranjo_oradores.wsgi:application --bind 0.0.0.0:$PORT
+python scripts/railway_start.py
 ```
 
-A Railway fornece a variável `$PORT`; por isso o servidor precisa escutar em `0.0.0.0:$PORT`.
+Por padrão, esse script executa as migrações e inicia o Gunicorn. A Railway fornece a variável `$PORT`; por isso o servidor escuta em `0.0.0.0:$PORT`.
 
 ### Disparo automático diário na Railway
 
@@ -210,14 +210,16 @@ O serviço web roda o Django Admin e recebe webhooks. Para executar verificaçõ
 Configure esse segundo serviço assim:
 
 ```text
-Start Command:
-python manage.py processar_notificacoes
+Variable:
+APP_MODE=cron
 
 Cron Schedule:
 0 11 * * *
 ```
 
 Esse exemplo roda todos os dias às 11:00 UTC, que corresponde a 08:00 em America/Sao_Paulo.
+
+Não altere o start command manualmente no serviço cron. Ele vem do `railway.json` e executa `python scripts/railway_start.py`. A variável `APP_MODE=cron` faz esse script rodar `python manage.py processar_notificacoes` e encerrar.
 
 Não use `python manage.py iniciar_agendador` na Railway. O APScheduler é útil para execução local ou para um worker contínuo, mas a Railway recomenda cron jobs que executam uma tarefa curta e terminam. O comando `processar_notificacoes` faz exatamente isso: verifica as notificações pendentes, envia o que for devido e encerra o processo.
 
