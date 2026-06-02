@@ -93,7 +93,7 @@ numero;titulo;ativo
 Execute:
 
 ```powershell
-python manage.py importar_temas "C:\Users\gigli\OneDrive\Documents\esbocos-discursos.CSV"
+python manage.py importar_temas discursos\data\esbocos-discursos.CSV
 ```
 
 Se um tema mudar de nome, mantenha o mesmo número no arquivo e rode o comando novamente. O sistema atualiza o título e o status ativo/inativo.
@@ -101,7 +101,7 @@ Se um tema mudar de nome, mantenha o mesmo número no arquivo e rode o comando n
 Para marcar como inativos os temas cadastrados que não aparecem mais no arquivo:
 
 ```powershell
-python manage.py importar_temas "C:\Users\gigli\OneDrive\Documents\esbocos-discursos.CSV" --desativar-ausentes
+python manage.py importar_temas discursos\data\esbocos-discursos.CSV --desativar-ausentes
 ```
 
 Para iniciar o agendador diário com APScheduler:
