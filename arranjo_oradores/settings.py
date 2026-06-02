@@ -15,7 +15,10 @@ if not DEBUG and SECRET_KEY == "change-me-in-production":
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,.up.railway.app").split(",")
+    for host in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        "127.0.0.1,localhost,.up.railway.app,healthcheck.railway.app",
+    ).split(",")
     if host.strip()
 ]
 CSRF_TRUSTED_ORIGINS = [
