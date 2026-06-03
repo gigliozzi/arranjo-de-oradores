@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manual de Uso - Arranjo de Oradores</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #5f6b7a;
+      --line: #d9e0ea;
+      --accent: #1f6feb;
+      --accent-soft: #e8f1ff;
+      --warn: #8a5a00;
+      --warn-bg: #fff7df;
+      --ok: #176a3a;
+      --ok-bg: #e8f7ee;
+      --danger: #9b1c1c;
+      --danger-bg: #fff0f0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #152238;
+      color: #ffffff;
+      padding: 32px 20px;
+    }
+
+    header .wrap,
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    header p {
+      margin: 0;
+      color: #d5deea;
+      max-width: 760px;
+    }
+
+    main {
+      padding: 24px 0 48px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    nav,
+    section,
+    .note,
+    .footer-note {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    nav {
+      position: sticky;
+      top: 16px;
+      padding: 18px;
+    }
+
+    nav h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    nav ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+    }
+
+    section {
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    ul,
+    ol {
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    code {
+      background: #eef2f7;
+      border: 1px solid #d7deea;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.95em;
+    }
+
+    .note {
+      margin: 16px 0;
+      padding: 14px 16px;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .note.info {
+      background: var(--accent-soft);
+      border-color: #bdd7ff;
+    }
+
+    .note.warning {
+      background: var(--warn-bg);
+      border-color: #f0d58a;
+      color: var(--warn);
+    }
+
+    .note.success {
+      background: var(--ok-bg);
+      border-color: #b8dfc7;
+      color: var(--ok);
+    }
+
+    .note.danger {
+      background: var(--danger-bg);
+      border-color: #f1b7b7;
+      color: var(--danger);
+    }
+
+    .checklist {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--ok);
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      background: #ffffff;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef2f7;
+    }
+
+    footer {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto 32px;
+    }
+
+    .footer-note {
+      padding: 14px 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        position: static;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Manual de Uso - Arranjo de Oradores</h1>
+      <p>Guia prático para operar o sistema pelo painel administrativo: cadastros, discursos, notificações automáticas e acompanhamento das mensagens.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="layout">
+      <nav aria-label="Sumário">
+        <h2>Sumário</h2>
+        <ol>
+          <li><a href="#visao-geral">Visão geral</a></li>
+          <li><a href="#acesso">Acesso ao Admin</a></li>
+          <li><a href="#oradores">Oradores</a></li>
+          <li><a href="#congregacoes">Congregações</a></li>
+          <li><a href="#temas">Temas de discursos</a></li>
+          <li><a href="#discursos">Discursos</a></li>
+          <li><a href="#marcos">Marcos automáticos</a></li>
+          <li><a href="#notificacoes">Notificações</a></li>
+          <li><a href="#respostas-status">Respostas e status</a></li>
+          <li><a href="#rotina">Rotina recomendada</a></li>
+          <li><a href="#erros">Erros comuns</a></li>
+        </ol>
+      </nav>
+
+      <div class="content">
+        <section id="visao-geral">
+          <h2>1. Visão geral</h2>
+          <p>O Arranjo de Oradores organiza discursos públicos e envia lembretes automáticos por WhatsApp ao orador antes da data do discurso.</p>
+          <p>O uso diário acontece pelo Django Admin. Não há uma tela separada fora do painel administrativo.</p>
+          <ul class="checklist">
+            <li>Cadastre oradores e congregações.</li>
+            <li>Mantenha a lista de temas de discursos ativa.</li>
+            <li>Cadastre o discurso com data, hora, orador, tema e congregação de destino.</li>
+            <li>Acompanhe as notificações, respostas e status das mensagens.</li>
+          </ul>
+        </section>
+
+        <section id="acesso">
+          <h2>2. Acesso ao Admin</h2>
+          <ol>
+            <li>Acesse a URL de produção do sistema.</li>
+            <li>Entre em <code>/admin/</code>.</li>
+            <li>Informe usuário e senha.</li>
+            <li>Após o login, use o menu lateral para acessar os cadastros.</li>
+          </ol>
+          <div class="note warning">
+            <strong>Atenção</strong>
+            Use uma conta de administrador apenas com pessoas autorizadas. Quem acessa o Admin pode alterar cadastros e disparar notificações.
+          </div>
+        </section>
+
+        <section id="oradores">
+          <h2>3. Cadastro de oradores</h2>
+          <p>Use este cadastro para registrar as pessoas que receberão lembretes de discursos.</p>
+          <ol>
+            <li>No menu, acesse <strong>Oradores</strong>.</li>
+            <li>Clique em <strong>Adicionar orador</strong>.</li>
+            <li>Preencha <strong>nome</strong>, <strong>celular</strong> e <strong>congregação de origem</strong>.</li>
+            <li>Use <strong>observações</strong> para anotações internas, se necessário.</li>
+            <li>Mantenha <strong>ativo</strong> marcado para oradores disponíveis.</li>
+            <li>Clique em <strong>Salvar</strong>.</li>
+          </ol>
+          <div class="note info">
+            <strong>Celular</strong>
+            Informe o celular com DDD. Para envios reais pelo WhatsApp, prefira usar o padrão com código do país, por exemplo <code>5511999999999</code>.
+          </div>
+          <p>Se um orador não deve mais receber convites ou lembretes, desmarque <strong>ativo</strong> em vez de excluir o cadastro.</p>
+        </section>
+
+        <section id="congregacoes">
+          <h2>4. Cadastro de congregações</h2>
+          <p>Use este cadastro para registrar congregações de destino e seus dados de contato/endereço.</p>
+          <ol>
+            <li>No menu, acesse <strong>Congregações</strong>.</li>
+            <li>Clique em <strong>Adicionar congregação</strong>.</li>
+            <li>Preencha <strong>nome</strong>, <strong>responsável</strong> e <strong>telefone</strong>, se disponíveis.</li>
+            <li>No bloco <strong>Endereço</strong>, informe o <strong>CEP</strong>.</li>
+            <li>Ao terminar de informar o CEP, aguarde o preenchimento automático dos campos de endereço.</li>
+            <li>Revise logradouro, bairro, cidade e estado.</li>
+            <li>Preencha manualmente <strong>número</strong> e <strong>complemento</strong>, quando existirem.</li>
+            <li>Clique em <strong>Salvar</strong>.</li>
+          </ol>
+          <div class="note success">
+            <strong>Endereço na mensagem</strong>
+            O endereço cadastrado da congregação é incluído automaticamente no lembrete enviado por WhatsApp.
+          </div>
+        </section>
+
+        <section id="temas">
+          <h2>5. Temas de discursos</h2>
+          <p>Os temas permitem selecionar um discurso a partir de uma lista predefinida.</p>
+          <ol>
+            <li>No menu, acesse <strong>Temas de discursos</strong>.</li>
+            <li>Use a busca para localizar por número ou título.</li>
+            <li>Abra um tema para editar o título ou o status <strong>ativo</strong>.</li>
+            <li>Desmarque <strong>ativo</strong> para temas descontinuados.</li>
+          </ol>
+          <div class="note info">
+            <strong>Número e título</strong>
+            O número facilita a busca no Admin. No WhatsApp, o sistema envia apenas o título do discurso, sem o número.
+          </div>
+          <p>Se um tema mudar de nome, atualize o título mantendo o mesmo número. Isso preserva a organização da lista.</p>
+        </section>
+
+        <section id="discursos">
+          <h2>6. Cadastro de discursos</h2>
+          <p>O discurso é o agendamento principal. Ele liga orador, tema, congregação, data, hora e status.</p>
+          <ol>
+            <li>No menu, acesse <strong>Discursos</strong>.</li>
+            <li>Clique em <strong>Adicionar discurso</strong>.</li>
+            <li>Selecione o <strong>orador</strong>.</li>
+            <li>Selecione o <strong>tema predefinido</strong>. Use o número ou parte do título para buscar.</li>
+            <li>Selecione a <strong>congregação de destino</strong>.</li>
+            <li>Informe <strong>data</strong> e <strong>hora</strong>.</li>
+            <li>Escolha o <strong>status</strong>.</li>
+            <li>Use <strong>observações</strong> para informações internas.</li>
+            <li>Clique em <strong>Salvar</strong>.</li>
+          </ol>
+          <h3>Status do discurso</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Uso recomendado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Agendado</td>
+                <td>Use quando o discurso foi marcado, mas ainda não teve confirmação final.</td>
+              </tr>
+              <tr>
+                <td>Confirmado</td>
+                <td>Use quando o orador confirmou o compromisso.</td>
+              </tr>
+              <tr>
+                <td>Cancelado</td>
+                <td>Use quando o discurso não acontecerá mais.</td>
+              </tr>
+              <tr>
+                <td>Realizado</td>
+                <td>Use após o discurso acontecer.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note warning">
+            <strong>Notificações automáticas</strong>
+            As notificações são criadas para discursos com status <strong>Agendado</strong> ou <strong>Confirmado</strong>.
+          </div>
+        </section>
+
+        <section id="marcos">
+          <h2>7. Marcos automáticos</h2>
+          <p>Ao salvar um discurso novo, o sistema cria notificações para os marcos de <strong>30</strong>, <strong>15</strong>, <strong>7</strong> e <strong>2</strong> dias antes da data do discurso.</p>
+          <p>Exemplo: se o discurso está marcado para 30/07, o marco de 30 dias fica previsto para 30/06.</p>
+          <div class="note info">
+            <strong>Regra para discursos novos</strong>
+            Marcos vencidos antes da data de cadastro não são criados. Se um discurso for cadastrado com 7 dias de antecedência, o sistema cria apenas os marcos de 7 e 2 dias.
+          </div>
+          <div class="note success">
+            <strong>Cron automático</strong>
+            O cron da Railway roda automaticamente todos os dias e processa as notificações pendentes.
+          </div>
+          <p>Notificações já enviadas permanecem registradas como histórico, mesmo que o discurso seja editado depois.</p>
+        </section>
+
+        <section id="notificacoes">
+          <h2>8. Consulta e reenvio de notificações</h2>
+          <p>A tela <strong>Notificações</strong> mostra os lembretes criados para cada discurso.</p>
+          <ol>
+            <li>No menu, acesse <strong>Notificações</strong>.</li>
+            <li>Use filtros por data, marco, status, orador, congregação ou status do discurso.</li>
+            <li>Abra uma notificação para consultar detalhes do envio.</li>
+            <li>Para envio manual, selecione uma ou mais notificações.</li>
+            <li>No menu de ações, escolha <strong>Enviar/reprocessar notificações selecionadas</strong>.</li>
+            <li>Clique em <strong>Executar</strong>.</li>
+          </ol>
+          <h3>Status de envio</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Significado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pendente</td>
+                <td>A notificação ainda não foi enviada e pode ser processada pelo cron ou manualmente.</td>
+              </tr>
+              <tr>
+                <td>Enviado</td>
+                <td>A mensagem foi aceita pela API de WhatsApp.</td>
+              </tr>
+              <tr>
+                <td>Erro</td>
+                <td>Houve falha no envio. Consulte o campo de resposta da API.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note warning">
+            <strong>Reenvio</strong>
+            Para retestar uma notificação com erro, selecione-a e use primeiro <strong>Marcar selecionadas como pendente</strong>. Depois execute o envio.
+          </div>
+        </section>
+
+        <section id="respostas-status">
+          <h2>9. Respostas e status das mensagens</h2>
+          <p>O sistema registra respostas recebidas pelo WhatsApp e eventos de status das mensagens.</p>
+          <h3>Respostas de notificações</h3>
+          <ol>
+            <li>Acesse <strong>Respostas de notificações</strong>.</li>
+            <li>Consulte telefone, nome do contato, mensagem recebida e notificação relacionada.</li>
+            <li>Use esse histórico para acompanhar confirmações ou dúvidas enviadas pelo orador.</li>
+          </ol>
+          <h3>Eventos de status das mensagens</h3>
+          <ol>
+            <li>Acesse <strong>Eventos de status das mensagens</strong>.</li>
+            <li>Consulte status, telefone, ID da mensagem e notificação relacionada.</li>
+            <li>Use esses eventos para verificar entrega, leitura ou outros retornos da API.</li>
+          </ol>
+          <div class="note info">
+            <strong>Webhook</strong>
+            Respostas e status dependem da configuração correta dos webhooks da Z-API.
+          </div>
+        </section>
+
+        <section id="rotina">
+          <h2>10. Rotina recomendada</h2>
+          <ol>
+            <li>Cadastre ou atualize oradores ativos.</li>
+            <li>Cadastre ou atualize congregações e endereços.</li>
+            <li>Confirme se o tema do discurso está ativo.</li>
+            <li>Cadastre o discurso com data e hora corretas.</li>
+            <li>Verifique a aba de notificações dentro do discurso.</li>
+            <li>Acompanhe diariamente notificações com status <strong>Erro</strong>.</li>
+            <li>Consulte respostas recebidas para registrar confirmações.</li>
+            <li>Após o evento, altere o status do discurso para <strong>Realizado</strong>.</li>
+          </ol>
+          <div class="note success">
+            <strong>Boa prática</strong>
+            Use filtros e busca antes de criar novos cadastros. Isso evita duplicidade de oradores, congregações e discursos.
+          </div>
+        </section>
+
+        <section id="erros">
+          <h2>11. Erros comuns e o que fazer</h2>
+          <h3>Notificação com erro</h3>
+          <ol>
+            <li>Abra a notificação.</li>
+            <li>Leia o campo <strong>resposta da API</strong>.</li>
+            <li>Corrija o cadastro relacionado, se necessário.</li>
+            <li>Marque a notificação como pendente.</li>
+            <li>Execute o envio novamente.</li>
+          </ol>
+
+          <h3>Mensagem não chegou</h3>
+          <ol>
+            <li>Confira se o celular do orador está correto.</li>
+            <li>Verifique se a notificação aparece como <strong>Enviado</strong>.</li>
+            <li>Consulte <strong>Eventos de status das mensagens</strong>.</li>
+            <li>Confirme se a instância do WhatsApp está conectada na Z-API.</li>
+          </ol>
+
+          <h3>Orador sem celular ou celular incorreto</h3>
+          <ol>
+            <li>Acesse <strong>Oradores</strong>.</li>
+            <li>Abra o cadastro do orador.</li>
+            <li>Corrija o campo <strong>celular</strong>.</li>
+            <li>Salve e reenvie a notificação, se necessário.</li>
+          </ol>
+
+          <h3>Discurso cadastrado com poucos dias de antecedência</h3>
+          <p>Para discursos novos, o sistema não cria marcos que já venceram antes do cadastro. Se o discurso for cadastrado com 7 dias de antecedência, os marcos de 30 e 15 dias não serão criados.</p>
+
+          <h3>Cron não processou no horário esperado</h3>
+          <ol>
+            <li>Verifique se há notificações pendentes com data prevista vencida.</li>
+            <li>Confira se o serviço <strong>notificacoes-cron</strong> está ativo na Railway.</li>
+            <li>Consulte os logs do cron na Railway.</li>
+            <li>Se necessário, faça um teste com um horário próximo.</li>
+          </ol>
+
+          <h3>Tema inativo não aparece na seleção</h3>
+          <ol>
+            <li>Acesse <strong>Temas de discursos</strong>.</li>
+            <li>Localize o tema pelo número ou título.</li>
+            <li>Marque <strong>ativo</strong>.</li>
+            <li>Salve e volte ao cadastro do discurso.</li>
+          </ol>
+
+          <h3>Webhook não registra resposta</h3>
+          <ol>
+            <li>Confirme se a resposta foi enviada para o mesmo número conectado à Z-API.</li>
+            <li>Verifique a URL configurada no webhook da Z-API.</li>
+            <li>Confirme se o token do webhook está correto.</li>
+            <li>Consulte os logs da Railway enquanto envia uma resposta de teste.</li>
+          </ol>
+
+          <div class="note danger">
+            <strong>Evite apagar histórico</strong>
+            Prefira alterar status ou corrigir cadastros. Excluir registros pode remover informações úteis para auditoria e acompanhamento.
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-note">Manual gerado para a versão atual do sistema.</div>
+  </footer>
+</body>
+</html>
