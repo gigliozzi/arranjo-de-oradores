@@ -20,8 +20,15 @@ MARCOS_NOTIFICACAO = (30, 15, 7, 2)
 
 def criar_notificacoes_para_discurso(discurso):
     notificacoes = []
+    data_cadastro = timezone.localtime(discurso.criado_em).date() if discurso.criado_em else None
     for marco in MARCOS_NOTIFICACAO:
         data_prevista = discurso.data - timedelta(days=marco)
+        if data_cadastro and data_prevista < data_cadastro:
+            Notificacao.objects.filter(discurso=discurso, marco=marco).exclude(
+                status_envio=Notificacao.StatusEnvio.ENVIADO
+            ).delete()
+            continue
+
         notificacao, created = Notificacao.objects.get_or_create(
             discurso=discurso,
             marco=marco,

@@ -78,6 +78,16 @@ class NotificacaoTests(TestCase):
 
         self.assertEqual(discurso.notificacoes.count(), 4)
 
+    def test_nao_cria_marcos_vencidos_antes_do_cadastro_do_discurso(self):
+        discurso = self.criar_discurso(dias=7)
+
+        criar_notificacoes_para_discurso(discurso)
+
+        self.assertEqual(
+            set(discurso.notificacoes.values_list("marco", flat=True)),
+            {7, 2},
+        )
+
     @override_settings(ZAPI_ENABLED=False)
     def test_processa_notificacoes_pendentes_com_envio_simulado(self):
         discurso = self.criar_discurso(dias=2)
@@ -85,14 +95,14 @@ class NotificacaoTests(TestCase):
         resultado = processar_notificacoes_pendentes()
 
         self.assertEqual(resultado["erros"], 0)
-        self.assertEqual(resultado["enviadas"], 4)
+        self.assertEqual(resultado["enviadas"], 1)
         self.assertEqual(
             Notificacao.objects.filter(
                 discurso=discurso,
                 status_envio=Notificacao.StatusEnvio.ENVIADO,
                 data_envio__isnull=False,
             ).count(),
-            4,
+            1,
         )
 
     @override_settings(ZAPI_ENABLED=False)
@@ -102,13 +112,13 @@ class NotificacaoTests(TestCase):
         resultado = processar_notificacoes_pendentes(dry_run=True)
 
         self.assertTrue(resultado["dry_run"])
-        self.assertEqual(resultado["pendentes"], 4)
+        self.assertEqual(resultado["pendentes"], 1)
         self.assertEqual(
             Notificacao.objects.filter(
                 discurso=discurso,
                 status_envio=Notificacao.StatusEnvio.PENDENTE,
             ).count(),
-            4,
+            1,
         )
 
     @override_settings(ZAPI_ENABLED=False)
@@ -129,7 +139,7 @@ class NotificacaoTests(TestCase):
 
     @override_settings(ZAPI_ENABLED=False)
     def test_notificacao_id_processa_registro_especifico(self):
-        discurso = self.criar_discurso(dias=2)
+        discurso = self.criar_discurso(dias=7)
         notificacao = discurso.notificacoes.get(marco=7)
 
         resultado = processar_notificacoes_pendentes(notificacao_id=notificacao.id)

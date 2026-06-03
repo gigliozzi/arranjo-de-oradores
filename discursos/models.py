@@ -105,6 +105,12 @@ class Discurso(models.Model):
         default=Status.AGENDADO,
     )
     observacoes = models.TextField("observações", blank=True)
+    criado_em = models.DateTimeField(
+        "criado em",
+        null=True,
+        blank=True,
+        editable=False,
+    )
 
     class Meta:
         ordering = ["data", "hora"]
@@ -113,6 +119,11 @@ class Discurso(models.Model):
 
     def __str__(self):
         return f"{self.tema_para_exibicao} - {self.orador} ({self.data:%d/%m/%Y})"
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.criado_em:
+            self.criado_em = timezone.now()
+        super().save(*args, **kwargs)
 
     @property
     def tema_para_exibicao(self):
